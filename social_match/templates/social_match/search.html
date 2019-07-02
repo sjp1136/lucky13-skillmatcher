@@ -1,0 +1,183 @@
+<!--***************************************************************************************
+* REFERENCES
+* Title: How to Filter QuerySets Dynamically
+* Author: Vitor Freitas
+* Date: November 28, 2016
+* Code version: n/a
+* Availability: https://simpleisbetterthancomplex.com/tutorial/2016/11/28/how-to-filter-querysets-dynamically.html
+****************************************************************************************-->
+
+{% extends 'social_match/base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+{{ filter.form.media }}
+{% if user.is_authenticated %}
+    <style>
+        /* The typing effect */
+        @keyframes typing {
+        from {
+            width: 0;
+        }
+        to {
+            width: 100%;
+        }
+        }
+        /* The typewriter cursor effect */
+        @keyframes blink-caret {
+        from,
+        to {
+            border-color: transparent;
+        }
+        50% {
+            border-color: black;
+        }
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $(".row").fadeIn(500).delay("slow").removeAttr('style');
+            $(".buttons").fadeIn(500).delay("slow").removeAttr('style');
+            $(".c").fadeIn(300).delay("slow").removeAttr('style');
+        // $(".search").fadeIn(500).delay("slow").removeAttr('style');
+
+        });
+    </script>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12 col-md-8 order-sm-1 order-2 px-5" style="overflow-y: auto; max-height:1200px; overflow-x: hidden;">
+            <div class="row justify-content-start">
+                {% for u in filter.qs %}
+                    <div class="col-auto mb-3">
+                        <div class = "c" style ="display: none;">
+                          <div class="card" style="width:15rem !important; overflow-y: auto; max-height:380px; min-height:380px; overflow-x: hidden;">
+                        {% if u.valid_picture_url %}
+{#                            {% if u.picture.isempty or u.picture.name == 'False' %}#}
+{#                                <img class="card-img-top" src="{% static 'images/Portrait_Placeholder_Square.png' %}">#}
+{#                            {% else %}#}
+                                <img class="card-img-top" src="{{ u.picture.url }}">
+{#                            {% endif %}#}
+                        {% else %}
+                            <img class="card-img-top" src="{% static 'images/Portrait_Placeholder_Square.png' %}">
+                        {% endif %}
+                            <div class="card-body">
+                                <p class="card-title"><strong><a href="{% url 'social_match:profile' u.id %}">{{ u.first_name }} {{ u.last_name }}</a></strong></p>
+                                <p>{% if u.class_standing %} {{ u.get_class_standing_display }}, {% endif %}Class of {{ u.graduation_year }}</p>
+                                {% if u.majors.all %}
+                                    {% for major in u.majors.all %}
+                                        {% if forloop.last %}
+                                            <p class="text-muted" style="display:inline">{{ major.name }}</p>
+                                        {% else %}
+                                            <p class="text-muted" style="display:inline">{{ major.name }}</p>,
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted">Undeclared</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                {% empty %}
+                    <h3>No users available</h3>
+                {% endfor %}
+
+{#                User cards to test layout#}
+{#                <div class="col-auto mb-3">#}
+{#                    <div class="card" style="width:15rem !important">#}
+{#                        <img class="card-img-top" src="{% static 'images/Portrait_Placeholder_Square.png' %}">#}
+{#                        <div class="card-body">#}
+{#                            <p class="card-title">Test user</p>#}
+{#                            <p>Second Year, Class of 2021</p>#}
+{#                            <p>Biomedical Engineering, Computer Science, Commerce, Economics</p>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{##}
+{#                <div class="col-auto mb-3">#}
+{#                    <div class="card" style="width:15rem !important">#}
+{#                        <img class="card-img-top" src="{% static 'images/Portrait_Placeholder_Square.png' %}">#}
+{#                        <div class="card-body">#}
+{#                            <p class="card-title">Test user</p>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{##}
+{#                <div class="col-auto mb-3">#}
+{#                    <div class="card" style="width:15rem !important">#}
+{#                        <img class="card-img-top" src="{% static 'images/Portrait_Placeholder_Square.png' %}">#}
+{#                        <div class="card-body">#}
+{#                            <p class="card-title">Test user</p>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            #}
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-md-4 order-1 jumbotron">
+            <form method="get">
+                <h3 style="margin-top: 0"><strong>Search</strong></h3>
+
+                    <div class="form-group">
+                      {{ filter.form.first_name.label_tag }}
+                      {% render_field filter.form.first_name class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.last_name.label_tag }}
+                      {% render_field filter.form.last_name class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.email.label_tag }}
+                      {% render_field filter.form.email class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.class_standing.label_tag }}
+                      {% render_field filter.form.class_standing class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.graduation_year.label_tag }}
+                      {% render_field filter.form.graduation_year class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.majors.label_tag }}
+                      {% render_field filter.form.majors class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.minors.label_tag }}
+                      {% render_field filter.form.minors class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.courses.label_tag }}
+                      {% render_field filter.form.courses class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.skills.label_tag }}
+                      {% render_field filter.form.skills class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.interests.label_tag }}
+                      {% render_field filter.form.interests class="form-control" %}
+                    </div>
+                    <div class="form-group">
+                      {{ filter.form.activities.label_tag }}
+                      {% render_field filter.form.activities class="form-control" %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                    </button>
+                    <a href="{% url 'social_match:resetsearch' %}">
+                    <button type="button" class="btn btn-light">
+                    <i class = "fas fa-redo"></i>
+                    </button></a>
+            </form>
+        </div>
+
+    </div>
+  </form>
+
+{% endif %}
+</div>
+{% endblock %}

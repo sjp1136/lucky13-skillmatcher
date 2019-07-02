@@ -1,0 +1,24 @@
+{% extends 'social_match/base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="container">
+    <h3>Edit your post</h3>
+    <form method="POST">{% csrf_token %}
+        <div class="form-group">
+            <label>Title:</label>
+            {% render_field form.headline class='form-control' %}
+        </div><br>
+        <div class="form-group">
+            <label>Message:</label>
+            {% render_field form.message class='form-control' %}
+        </div><br>
+        <div class="form-check">
+            {% render_field form.post_active class='form-check-input' %}
+            <label class="form-check-label">Archived</label>
+        </div>
+        </br>
+        <button class="btn btn-primary" type="submit">Save</button>
+        <input type="hidden" name="return_to" value="{{return_to}}">
+    </form>
+</div>
+{% endblock %}

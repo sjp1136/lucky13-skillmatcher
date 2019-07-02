@@ -1,0 +1,202 @@
+{% load static %}
+{% load widget_tweaks %}
+{% load socialmatchtags %}
+
+<div class="col-sm">
+    {% if filtered %}
+        <h3>Showing filter results for...</h3>
+        <h5>
+            {% if names %}
+            <b>Name:</b> {{ names }} <br>
+            {% endif %}
+
+            {% if keywords %}
+            <b>Keywords:</b> {{ keywords }} <br>
+            {% endif %}
+
+            <br>
+
+            {% if following %}
+            Posts by users I'm <b>following</b> <br>
+            {% endif %}
+
+            {% if liked %}
+            Posts I've <b>liked</b> <br>
+            {% endif %}
+
+            {% if commented %}
+            Posts I've <b>commented on</b> <br>
+            {% endif %}
+
+            <br>
+        </h5>
+    {% else %}
+    <h3>All Posts</h3>
+    {% endif %}
+    {% if post_list %}
+    {% for post in post_list %}
+    <div class="card">
+        <div class="card-header">
+            <div class="row no-gutters">
+                <div class="col-1">
+                    {% if post.user.valid_picture_url %}
+                        <img class="img-fluid" src="{{ post.user.picture.url }}">
+                    {% else %}
+                        <img class="img-fluid" src="{% static 'images/Portrait_Placeholder_Square.png' %}">
+                    {% endif %}
+                </div>
+                <div class="col-11 pl-2">
+                    <h4 class="card-title" style="display:inline"><strong>{{ post.headline }}</strong></h4>
+                    {% if post.user == user %}
+                    <a class ="btn-md" style="margin-left:20px;" href="/editpost/{{post.id}}?return=home">
+                            <i class="fas fa-edit"></i></i>
+                    </a>
+                    {% endif %}
+                    <br>
+                    <a href="{% url 'social_match:profile' post.user.id %}" class="primary">{{post.user.first_name}} {{post.user.last_name}}</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+           <p class="lead">{{ post.message }}</p>
+        </div>
+
+        <div class="card-footer">
+            <a data-toggle="modal" data-target="#a{{post.id}}" style="color: blue">
+                <p style="float:left">{{ post.likes.count }} like{{ post.likes.count|pluralize }}</p>
+            </a>
+            {% if post.post_edited %}
+                <p style="float:right">Edited {{ post.date_edited }}</p>
+            {% else %}
+                <p style="float:right">Posted {{ post.date }}</p>
+            {% endif %}
+            <div style="clear: both;"></div>
+            <form style="display:inline" action="{% url 'social_match:likepost' %}" method="post">
+                {% csrf_token %}
+                {% if user in post.likes.all %}
+                    <button type="submit" id="like-home" value="{{post.id}}" data-t="home" data-p="{{post_list.number}}" data-k="{{keywords}}" data-n="{{names}}" data-fol="{{following}}" data-l="{{liked}}" data-c="{{commented}}" data-f="{{filtered}}" class="btn btn-outline-primary btn-rounded waves-effect btn-md"><i class="fas fa-thumbs-down"></i></button>
+                {% else %}
+                    <button type="submit" id="like-home" value="{{post.id}}" data-t="home" data-p="{{post_list.number}}" data-k="{{keywords}}" data-n="{{names}}" data-fol="{{following}}" data-l="{{liked}}" data-c="{{commented}}" data-f="{{filtered}}" class="btn btn-primary btn-md"><i class="fas fa-thumbs-up"></i></button>
+                {% endif %}
+            </form>
+
+            {% if form != None and post_id == post.id %}
+                <form style="display:inline" action = "{% url 'social_match:commentpost' %}" method="post" id="comment-form">
+                {% csrf_token %}
+                {% render_field form.text %}
+                <button type="submit" id="submitcomment-home" value="{{post.id}}" data-t="home" data-p="{{post_list.number}}" data-k="{{keywords}}" data-n="{{names}}" data-fol="{{following}}" data-l="{{liked}}" data-c="{{commented}}" data-f="{{filtered}}" class="btn btn-outline-primary btn-rounded waves-effect btn-md"><i class="fas fa-comment"></i></button>
+                </form>
+            {% else %}
+                <form style="display:inline" action="{% url 'social_match:commentpost' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" id="comment-home" value="{{post.id}}" data-t="home" data-p="{{post_list.number}}" data-k="{{keywords}}" data-n="{{names}}" data-fol="{{following}}" data-l="{{liked}}" data-c="{{commented}}" data-f="{{filtered}}" class="btn btn-primary btn-md"><i class="fas fa-comment"></i></button>
+                </form>
+            {% endif %}
+
+        </div>
+
+        {% comment %} Likes Modal! {% endcomment %}
+        <div class="modal fade" id="a{{post.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">People Who Liked This Post:</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body" style="overflow: auto">
+                        {% if post.likes.all %}
+                        <div class="container">
+                        {% for user in post.likes.all %}
+                            <div class="row">
+                                 <div class="card card2">
+                                    <div class="card-body" style="display:flex">
+                                        <h5 class="card-title" style="display: flex">
+                                            {% if user.valid_picture_url %}
+                                                <img height='20' width='20' src="{{ user.picture.url }}">
+                                            {% else %}
+                                                <img height='20' width='20' src="{% static 'images/Portrait_Placeholder_Square.png' %}">
+                                            {% endif %}
+                                        </h5>
+                                        <a style="margin-left:20px" href="{% url 'social_match:profile' user.id %}" class="primary">{{user.first_name}} {{user.last_name}}</a>
+                                        <p style="margin-left:20px" class="card-text">{% if user.class_standing %} {{ user.get_class_standing_display }}, {% endif %}Class of {{ user.graduation_year }}</p>
+
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                        {% else %}
+                            No likes yet!
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} End of Modal! {% endcomment %}
+
+        <ul class="list-group list-group-flush">
+            {% post_comments post as comments %}
+
+            {% for comment in comments %}
+                <li class="list-group-item">
+                    <div class="row no-gutters">
+                        <div class="col-1">
+                            {% if comment.user.valid_picture_url %}
+                                <img class="img-fluid" src="{{ comment.user.picture.url }}">
+                            {% else %}
+                                <img class="img-fluid" src="{% static 'images/Portrait_Placeholder_Square.png' %}">
+                            {% endif %}
+                        </div>
+                        <div class="col-11 pl-2">
+                            <p>
+                            <a href="{% url 'social_match:profile' comment.user.id %}" class="primary">{{ comment.user.first_name }} {{ comment.user.last_name }}</a>: {{ comment.text }}
+                                <br>
+                                <span class="card-info">{{ comment.date }}</span>
+                                {% if request.user == comment.user %}
+                                    <a href="{% url 'social_match:commentpost' %}" method="post" id="deletecomment-home" data-cid="{{comment.id}}" data-t="home" data-p="{{post_list.number}}" data-k="{{keywords}}" data-n="{{names}}" data-fol="{{following}}" data-l="{{liked}}" data-c="{{commented}}" data-f="{{filtered}}" class="primary">
+                                        <i class="fas fa-trash"></i></a>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+
+    </div>
+    <br>
+    {% endfor %}
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if post_list.has_previous %}
+                    <a href="?p=1&k={{keywords}}&n={{names}}&fol={{following}}&l={{liked}}&c={{commented}}&f={{filtered}}" class="primary">&laquo; first</a> -
+                    {% if post_list.previous_page_number != 1 %}
+                        <a href="?p={{post_list.previous_page_number}}&k={{keywords}}&n={{names}}&fol={{following}}&l={{liked}}&c={{commented}}&f={{filtered}}" class="primary">previous</a>
+                    {% endif %}
+                {% endif %}
+
+                <span class="current">
+                    Page {{ post_list.number }} of {{ post_list.paginator.num_pages }}.
+                </span>
+
+                {% if post_list.has_next %}
+                    {% if post_list.next_page_number != post_list.paginator.num_pages %}
+                        <a href="?p={{post_list.next_page_number}}&k={{keywords}}&n={{names}}&fol={{following}}&l={{liked}}&c={{commented}}&f={{filtered}}" class="primary">next</a> -
+                    {% endif %}
+                <a href="?p={{post_list.paginator.num_pages}}&k={{keywords}}&n={{names}}&fol={{following}}&l={{liked}}&c={{commented}}&f={{filtered}}" class="primary">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    {% else %}
+    <p>No posts are available.</p>
+    {% endif %}
+</div>
